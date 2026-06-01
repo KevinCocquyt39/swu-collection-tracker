@@ -42,6 +42,21 @@
             />
           </div>
 
+          <div class="form-group">
+            <label class="form-label">Photo</label>
+            <div class="photo-row">
+              <button type="button" class="btn btn-ghost photo-btn" :disabled="capturing" @click="takePhoto">
+                <span>📷</span> {{ form.photo ? 'Retake' : 'Take Photo' }}
+              </button>
+              <button v-if="form.photo" type="button" class="btn btn-ghost photo-btn" @click="form.photo = undefined">
+                ✕ Remove
+              </button>
+            </div>
+            <div v-if="form.photo" class="photo-preview-wrap">
+              <img :src="form.photo" alt="Card photo preview" class="photo-preview" />
+            </div>
+          </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-ghost" @click="$emit('update:modelValue', false)">
               Cancel
@@ -57,33 +72,85 @@
 </template>
 
 <script setup lang="ts">
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
+
 const props = defineProps<{
   modelValue: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'add': [name: string, quantity: number]
+  'add': [name: string, quantity: number, photo?: string]
 }>()
 
 const nameInput = ref<HTMLInputElement | null>(null)
+const capturing = ref(false)
 
 const form = reactive({
   name: '',
-  quantity: 1
+  quantity: 1,
+  photo: undefined as string | undefined
 })
 
 watch(() => props.modelValue, (open) => {
   if (open) {
     form.name = ''
     form.quantity = 1
+    form.photo = undefined
     nextTick(() => nameInput.value?.focus())
   }
 })
 
+async function takePhoto() {
+  capturing.value = true
+  try {
+    const image = await Camera.getPhoto({
+      resultType: CameraResultType.DataUrl,
+      source: CameraSource.Prompt,
+      quality: 60,
+      width: 600,
+      correctOrientation: true,
+    })
+    form.photo = image.dataUrl ?? undefined
+  } catch {
+    // user cancelled or permission denied — do nothing
+  } finally {
+    capturing.value = false
+  }
+}
+
 function submit() {
   if (!form.name.trim() || form.quantity < 1) return
-  emit('add', form.name.trim(), form.quantity)
+  emit('add', form.name.trim(), form.quantity, form.photo)
   emit('update:modelValue', false)
 }
 </script>
+
+<style scoped>
+.photo-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.photo-btn {
+  font-size: 0.65rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.photo-preview-wrap {
+  margin-top: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.photo-preview {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  background: #000;
+}
+</style>

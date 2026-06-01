@@ -5,6 +5,7 @@ export interface CardEntry {
   name: string;
   quantity: number;
   addedAt: string;
+  photo?: string;
 }
 
 export type SortField = "name" | "quantity" | "addedAt";
@@ -35,18 +36,20 @@ export function useCollection() {
     }
   };
 
-  const addCard = (name: string, quantity: number) => {
+  const addCard = (name: string, quantity: number, photo?: string) => {
     const existing = cards.value.find(
       (c) => c.name.toLowerCase() === name.toLowerCase(),
     );
     if (existing) {
       existing.quantity += quantity;
+      if (photo) existing.photo = photo;
     } else {
       cards.value.push({
         id: crypto.randomUUID(),
         name: name.trim(),
         quantity,
         addedAt: new Date().toISOString(),
+        photo,
       });
     }
     saveToStorage();

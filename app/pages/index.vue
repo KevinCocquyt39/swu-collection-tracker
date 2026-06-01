@@ -28,6 +28,7 @@
         <thead>
           <tr>
             <th>#</th>
+            <th></th>
             <th>Card Name</th>
             <th>Qty</th>
             <th>Added</th>
@@ -40,6 +41,10 @@
               <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted)">
                 {{ String(index + 1).padStart(3, '0') }}
               </span>
+            </td>
+            <td class="thumb-cell">
+              <img v-if="card.photo" :src="card.photo" alt="" class="card-thumb" />
+              <span v-else class="card-thumb-empty">—</span>
             </td>
             <td><span class="card-name">{{ card.name }}</span></td>
             <td><span class="card-qty">×{{ card.quantity }}</span></td>
@@ -87,8 +92,8 @@ const sortedCards = computed(() => {
   })
 })
 
-function handleAdd(name: string, quantity: number) {
-  addCard(name, quantity)
+function handleAdd(name: string, quantity: number, photo?: string) {
+  addCard(name, quantity, photo)
 }
 
 function formatDate(iso: string) {
@@ -99,3 +104,24 @@ function formatDate(iso: string) {
   })
 }
 </script>
+
+<style scoped>
+.thumb-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.card-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.card-thumb-empty {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+</style>
