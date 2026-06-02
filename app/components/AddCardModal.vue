@@ -76,6 +76,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 
 const props = defineProps<{
   modelValue: boolean
+  initialName?: string
 }>()
 
 const emit = defineEmits<{
@@ -94,7 +95,7 @@ const form = reactive({
 
 watch(() => props.modelValue, (open) => {
   if (open) {
-    form.name = ''
+    form.name = props.initialName ?? ''
     form.quantity = 1
     form.photo = undefined
     nextTick(() => nameInput.value?.focus())

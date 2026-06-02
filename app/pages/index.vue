@@ -22,9 +22,21 @@
         <span class="empty-state-icon">🌌</span>
         <div class="empty-state-title">No cards logged</div>
         <div class="empty-state-text">Begin your collection by adding a card above</div>
+        <div v-if="exampleNames.length" class="empty-state-examples">
+          <div class="empty-state-examples-label">// example cards from the galaxy</div>
+          <div class="empty-state-examples-list">
+            <button
+              v-for="name in exampleNames"
+              :key="name"
+              class="example-pill"
+              @click="openWithExample(name)"
+            >{{ name }}</button>
+          </div>
+        </div>
       </div>
 
-      <table v-else class="card-table">
+      <div v-else class="table-scroll">
+      <table class="card-table">
         <thead>
           <tr>
             <th>#</th>
@@ -57,9 +69,10 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
-    <AddCardModal v-model="showModal" @add="handleAdd" />
+    <AddCardModal v-model="showModal" :initial-name="selectedExample" @add="handleAdd" />
   </div>
 </template>
 
@@ -72,10 +85,23 @@ const { cards, loadFromStorage, addCard, removeCard, totalCards } = useCollectio
 const { sortField, sortDirection, loadSettings } = useSettings()
 
 const showModal = ref(false)
+const selectedExample = ref('')
+const exampleNames = ref<string[]>([])
 
-onMounted(() => {
+function openWithExample(name: string) {
+  selectedExample.value = name
+  showModal.value = true
+}
+
+onMounted(async () => {
   loadFromStorage()
   loadSettings()
+  try {
+    const data = await $fetch<{ names: string[] }>('/api/sw-characters')
+    exampleNames.value = data.names
+  } catch {
+    // non-critical — silently ignore if the fetch fails
+  }
 })
 
 const sortedCards = computed(() => {
@@ -94,6 +120,7 @@ const sortedCards = computed(() => {
 
 function handleAdd(name: string, quantity: number, photo?: string) {
   addCard(name, quantity, photo)
+  selectedExample.value = ''
 }
 
 function formatDate(iso: string) {
@@ -123,5 +150,50 @@ function formatDate(iso: string) {
 .card-thumb-empty {
   color: var(--text-muted);
   font-size: 0.7rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.empty-state-examples {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.empty-state-examples-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.empty-state-examples-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.example-pill {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  letter-spacing: 0.03em;
+}
+
+.example-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 </style>
