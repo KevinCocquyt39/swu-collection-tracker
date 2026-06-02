@@ -25,50 +25,47 @@
         <div v-if="exampleNames.length" class="empty-state-examples">
           <div class="empty-state-examples-label">// example cards from the galaxy</div>
           <div class="empty-state-examples-list">
-            <button
-              v-for="name in exampleNames"
-              :key="name"
-              class="example-pill"
-              @click="openWithExample(name)"
-            >{{ name }}</button>
+            <button v-for="name in exampleNames" :key="name" class="example-pill" @click="openWithExample(name)">{{ name
+            }}</button>
           </div>
         </div>
       </div>
 
       <div v-else class="table-scroll">
-      <table class="card-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th></th>
-            <th>Card Name</th>
-            <th>Qty</th>
-            <th>Added</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(card, index) in sortedCards" :key="card.id">
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted)">
-                {{ String(index + 1).padStart(3, '0') }}
-              </span>
-            </td>
-            <td class="thumb-cell">
-              <img v-if="card.photo" :src="card.photo" alt="" class="card-thumb" />
-              <span v-else class="card-thumb-empty">—</span>
-            </td>
-            <td><span class="card-name">{{ card.name }}</span></td>
-            <td><span class="card-qty">×{{ card.quantity }}</span></td>
-            <td><span class="card-date">{{ formatDate(card.addedAt) }}</span></td>
-            <td>
-              <button class="btn btn-danger" style="padding: 0.35rem 0.7rem; font-size: 0.55rem;" @click="removeCard(card.id)">
-                Remove
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <table class="card-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th></th>
+              <th>Card Name</th>
+              <th>Qty</th>
+              <th>Added</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(card, index) in sortedCards" :key="card.id">
+              <td>
+                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted)">
+                  {{ String(index + 1).padStart(3, '0') }}
+                </span>
+              </td>
+              <td class="thumb-cell">
+                <img v-if="card.photo" :src="card.photo" alt="" class="card-thumb" />
+                <span v-else class="card-thumb-empty">—</span>
+              </td>
+              <td><span class="card-name">{{ card.name }}</span></td>
+              <td><span class="card-qty">×{{ card.quantity }}</span></td>
+              <td><span class="card-date">{{ formatDate(card.addedAt) }}</span></td>
+              <td>
+                <button class="btn btn-danger" style="padding: 0.35rem 0.7rem; font-size: 0.55rem;"
+                  @click="removeCard(card.id)">
+                  Remove
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -96,9 +93,15 @@ function openWithExample(name: string) {
 onMounted(async () => {
   loadFromStorage()
   loadSettings()
+
   try {
-    const data = await $fetch<{ names: string[] }>('/api/sw-characters')
-    exampleNames.value = data.names
+    // swapi.tech — free, no auth, valid TLS certificate
+    const randomPage = Math.floor(Math.random() * 9) + 1
+    const data = await $fetch<{ results: { name: string }[] }>(
+      `https://swapi.tech/api/people/?page=${randomPage}&limit=10`,
+    )
+    const shuffled = [...data.results].sort(() => Math.random() - 0.5)
+    exampleNames.value = shuffled.slice(0, 5).map((p) => p.name)
   } catch {
     // non-critical — silently ignore if the fetch fails
   }
